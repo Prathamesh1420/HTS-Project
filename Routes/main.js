@@ -1,7 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const model = require("../Models/model");
+const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+require("dotenv").config();
 
 router.post("/signup", async (req, res) => {
   const { first_name, last_name, email, password } = req.body;
@@ -40,9 +42,17 @@ router.post("/login", async (req, res) => {
     const userPass = verify[0].password;
     const comparePass = await bcrypt.compare(password, userPass);
     if (!comparePass) {
-      return res.status(401).send("Wrong Password");
+      return res.status(401).send("Wrong Password!");
     }
-    return res.status(200).send("Login Successfull!");
+
+    const authToken = jwt.sign({ id: verify._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+
+    return res.status(200).json({
+      auth: authToken,
+      message: "Login Successful!",
+    });
   } catch (error) {
     return res.status(500).send(`Error: ${error.message}`);
   }
